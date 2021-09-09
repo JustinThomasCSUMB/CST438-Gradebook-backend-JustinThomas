@@ -1,7 +1,6 @@
 package com.cst438.controllers;
 
 import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -144,25 +143,14 @@ public class GradeBookController {
 	 * @param dueDate - date (dd-mm-yyy hh:mm:ss) of when the assignment is due
 	 */
 	@PostMapping("/addAssignment")
-	public void addAssignment(@RequestBody String name, @RequestBody String dueDate) {
-	   SimpleDateFormat sdf = new SimpleDateFormat("dd-mm-yyy hh:mm:ss");
-	   long timeInMili; 
-	   
-	   try {
-	      timeInMili = sdf.parse(dueDate).getTime();      
-      }catch(Exception e) {
-         throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid date format.");
-      }
-	   
-	   Date dueDateSql = new Date(timeInMili);
-	   
+	public void addAssignment(@RequestBody String name, @RequestBody long dueDate) {
 	   Assignment assign = new Assignment();
-	   assign.setDueDate(dueDateSql);
+	   assign.setDueDate(new Date(dueDate));
 	   assign.setName(name);
 	   
 	   assignmentRepository.save(assign);
 	   
-	   }
+   }// addAssignment
 	
 /***** PUT *****/
 	@PutMapping("/gradebook/{id}")
