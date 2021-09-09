@@ -1,5 +1,7 @@
 package com.cst438.controllers;
 
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,7 +45,9 @@ public class GradeBookController {
 	
 	@Autowired
 	RegistrationService registrationService;
+
 	
+/***** GET *****/
 	// get assignments for an instructor that need grading
 	@GetMapping("/gradebook")
 	public AssignmentListDTO getAssignmentsNeedGrading( ) {
@@ -56,7 +61,7 @@ public class GradeBookController {
 		}
 		return result;
 	}
-	
+		
 	@GetMapping("/gradebook/{id}")
 	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId  ) {
 		
@@ -89,6 +94,7 @@ public class GradeBookController {
 		return gradebook;
 	}
 	
+/***** POST *****/	
 	@PostMapping("/course/{course_id}/finalgrades")
 	@Transactional
 	public void calcFinalGrades(@PathVariable int course_id) {
@@ -132,6 +138,33 @@ public class GradeBookController {
 		return "F";
 	}
 	
+	/**
+	 * Creates new assignment given name and due date
+	 * @param name - the name of the assignment
+	 * @param dueDate - date (dd-mm-yyy hh:mm:ss) of when the assignment is due
+	 */
+	@PostMapping("/addAssignment")
+	public void addAssignment(@RequestBody String name, @RequestBody String dueDate) {
+	   SimpleDateFormat sdf = new SimpleDateFormat("dd-mm-yyy hh:mm:ss");
+	   long timeInMili; 
+	   
+	   try {
+	      timeInMili = sdf.parse(dueDate).getTime();      
+      }catch(Exception e) {
+         throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid date format.");
+      }
+	   
+	   Date dueDateSql = new Date(timeInMili);
+	   
+	   Assignment assign = new Assignment();
+	   assign.setDueDate(dueDateSql);
+	   assign.setName(name);
+	   
+	   assignmentRepository.save(assign);
+	   
+	   }
+	
+/***** PUT *****/
 	@PutMapping("/gradebook/{id}")
 	@Transactional
 	public void updateGradebook (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId ) {
@@ -152,6 +185,30 @@ public class GradeBookController {
 		
 	}
 	
+	
+	/**
+	 * queries the selected assignment by id path variable
+	 * changes the assignment name passed from the request body
+	 * saves the assignment
+	 * @param name - new assignment name
+	 * @param assignmentId - Id of the assignment to modify
+	 */
+	@PutMapping("/editAssignment{id}")
+	public void editAssignment(@RequestBody String name, @PathVariable("id") int assignmentId) {
+	   
+	   String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)      
+	   Assignment assignment = checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.	   
+                       
+      if(assignment == null) {
+         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid assignment Id");
+      }
+      
+      assignment.setName(name);
+      assignmentRepository.save(assignment);
+	}// editAssignment
+	
+	
+
 	private Assignment checkAssignment(int assignmentId, String email) {
 		// get assignment 
 		Assignment assignment = assignmentRepository.findById(assignmentId);
@@ -165,5 +222,27 @@ public class GradeBookController {
 		
 		return assignment;
 	}
+	
+	
+	/***** DELETE *****/
+	
+	/**
+	 * deletes an assignment if permitted and exists and no grades exist for the assignment
+	 * @param assignmentId - ID of the assignment to delete
+	 */
+	@DeleteMapping("/deleteAssignment{id}")
+	public void deleteAssignment(@PathVariable("id") int assignmentId){
+	   
+      String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+	   Assignment delAssign = checkAssignment(assignmentId, email);
+	   List<Assignment> allAssign = assignmentRepository.findNeedGradingByEmail(email);
+	   if(!allAssign.contains(delAssign)) {
+	      throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment already graded. "+assignmentId );	      
+	   }
+   
+	   assignmentRepository.delete(delAssign);
+	}
+	
 
-}
+
+}// GradeBookController
