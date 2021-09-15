@@ -140,15 +140,25 @@ public class GradeBookController {
 	/**
 	 * Creates new assignment given name and due date
 	 * @param name - the name of the assignment
-	 * @param dueDate - date (dd-mm-yyy hh:mm:ss) of when the assignment is due
+	 * @param dueDate - time in milliseconds
 	 */
-	@PostMapping("/addAssignment")
-	public void addAssignment(@RequestBody String name, @RequestBody long dueDate) {
-	   Assignment assign = new Assignment();
-	   assign.setDueDate(new Date(dueDate));
-	   assign.setName(name);
+	@PostMapping("/gradebook/addAssignment")
+	@Transactional
+	public void addAssignment(@RequestBody Assignment assignment) {
+	     Assignment assign = new Assignment();
+        assign.setDueDate(assignment.getDueDate());
+        assign.setName(assignment.getName());
+        
+        assignmentRepository.save(assign);
+       
 	   
-	   assignmentRepository.save(assign);
+	   /*
+       * AssignmentDTO assign = new AssignmentListDTO.AssignmentDTO();
+       * assign.dueDate = new Date(dueDate).toString(); assign.assignmentName =
+       * name;
+       * 
+       * assignmentRepository.save(assign);
+       */
 	   
    }// addAssignment
 	
@@ -181,7 +191,8 @@ public class GradeBookController {
 	 * @param name - new assignment name
 	 * @param assignmentId - Id of the assignment to modify
 	 */
-	@PutMapping("/editAssignment{id}")
+	@PutMapping("/gradebook/editAssignment/{id}")
+	@Transactional
 	public void editAssignment(@RequestBody String name, @PathVariable("id") int assignmentId) {
 	   
 	   String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)      
@@ -218,13 +229,13 @@ public class GradeBookController {
 	 * deletes an assignment if permitted and exists and no grades exist for the assignment
 	 * @param assignmentId - ID of the assignment to delete
 	 */
-	@DeleteMapping("/deleteAssignment{id}")
+	@DeleteMapping("/gradebook/deleteAssignment/{id}")
+	@Transactional	
 	public void deleteAssignment(@PathVariable("id") int assignmentId){
 	   
       String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
-	   Assignment delAssign = checkAssignment(assignmentId, email);
-	   List<Assignment> allAssign = assignmentRepository.findNeedGradingByEmail(email);
-	   if(!allAssign.contains(delAssign)) {
+	   Assignment delAssign = checkAssignment(assignmentId, email);	   
+	   if(delAssign.getNeedsGrading() == 0) {
 	      throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment already graded. "+assignmentId );	      
 	   }
    

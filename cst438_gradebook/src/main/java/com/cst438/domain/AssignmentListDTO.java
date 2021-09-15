@@ -14,6 +14,9 @@ public class AssignmentListDTO {
 		public String courseTitle;
 		public int courseId;
 
+		// default constructor no args
+		public AssignmentDTO() {}
+		
 		public AssignmentDTO(int assignmentId, int courseId, String assignmentName, String dueDate,
 				String courseTitle) {
 			this.assignmentId = assignmentId;
@@ -22,6 +25,8 @@ public class AssignmentListDTO {
 			this.dueDate = dueDate;
 			this.courseTitle = courseTitle;
 		}
+		
+		
 	}
 
 	public ArrayList<AssignmentDTO> assignments = new ArrayList<>();
