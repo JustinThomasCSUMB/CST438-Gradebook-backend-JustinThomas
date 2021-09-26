@@ -7,7 +7,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cst438.domain.Course;
 import com.cst438.domain.CourseDTOG;
 import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
@@ -33,7 +32,7 @@ public class RegistrationServiceMQ extends RegistrationService {
 	// ----- configuration of message queues
 
 	@Autowired
-	Queue registrationQueue;
+	Queue registrationQueue = new Queue("registration-queue");
 
 
 	// ----- end of configuration of message queue
@@ -44,16 +43,18 @@ public class RegistrationServiceMQ extends RegistrationService {
 	@Transactional
 	public void receive(EnrollmentDTO enrollmentDTO) {
 		
-		//TODO  complete this method in homework 4
-		
+	   Enrollment enroll = new Enrollment();
+      enroll.setStudentName(enrollmentDTO.studentName);
+      enroll.setStudentEmail(enrollmentDTO.studentEmail);      
+      enroll.setCourse(courseRepository.findByCourse_id(enrollmentDTO.course_id));
+      
+      enrollmentRepository.save(enroll);
 	}
 
 	// sender of messages to Registration Service
 	@Override
 	public void sendFinalGrades(int course_id, CourseDTOG courseDTO) {
-		 
-		//TODO  complete this method in homework 4
-		
+		this.rabbitTemplate.convertAndSend(registrationQueue.getName(), courseDTO);
 	}
 
 }

@@ -31,10 +31,13 @@ public class EnrollmentController {
 	@Transactional
 	public EnrollmentDTO addEnrollment(@RequestBody EnrollmentDTO enrollmentDTO) {
 		
-		//TODO  complete this method in homework 4
+		Enrollment enroll = new Enrollment();
+		enroll.setStudentName(enrollmentDTO.studentName);
+		enroll.setStudentEmail(enrollmentDTO.studentEmail);		
+		enroll.setCourse(courseRepository.findByCourse_id(enrollmentDTO.course_id));
 		
-		return null;
-		
+		enrollmentRepository.save(enroll);				
+		return null;		
 	}
 
 }
