@@ -2,6 +2,11 @@ package com.cst438.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Date;
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.cst438.domain.Assignment;
 import com.cst438.domain.AssignmentListDTO;
+import com.cst438.domain.AssignmentListDTO.AssignmentDTO;
 import com.cst438.domain.AssignmentGrade;
 import com.cst438.domain.AssignmentGradeRepository;
 import com.cst438.domain.AssignmentRepository;
@@ -137,28 +143,23 @@ public class GradeBookController {
 	}
 	
 	/**
-	 * Creates new assignment given name and due date
-	 * @param name - the name of the assignment
-	 * @param dueDate - time in milliseconds
+	 * Creates new assignment given an AssignmentDTO object
+	 * params are in the request body json formatted
+	 * @param assignment - AssignmentDTO
+	 * @throws ParseException 
 	 */
 	@PostMapping("/gradebook/addAssignment")
 	@Transactional
-	public void addAssignment(@RequestBody Assignment assignment) {
+	public void addAssignment(@RequestBody AssignmentDTO assignment) throws ParseException {
 	     Assignment assign = new Assignment();
-        assign.setDueDate(assignment.getDueDate());
-        assign.setName(assignment.getName());
+	     java.text.DateFormat df = new java.text.SimpleDateFormat("MM-dd-yyyy h:mma");
+	     //TODO: convert from local to UTC
+	     long dueDate = df.parse(assignment.dueDate).getTime();	     
+        assign.setDueDate(new Date(dueDate));
+        assign.setName(assignment.assignmentName);
+        assign.setCourse(courseRepository.findByCourse_id(assignment.courseId));        
         
-        assignmentRepository.save(assign);
-       
-	   
-	   /*
-       * AssignmentDTO assign = new AssignmentListDTO.AssignmentDTO();
-       * assign.dueDate = new Date(dueDate).toString(); assign.assignmentName =
-       * name;
-       * 
-       * assignmentRepository.save(assign);
-       */
-	   
+        assignmentRepository.save(assign);   
    }// addAssignment
 	
 /***** PUT *****/
