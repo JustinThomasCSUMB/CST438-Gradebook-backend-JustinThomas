@@ -36,8 +36,8 @@ public class EnrollmentController {
 		enroll.setStudentEmail(enrollmentDTO.studentEmail);		
 		enroll.setCourse(courseRepository.findByCourse_id(enrollmentDTO.course_id));
 		
-		enrollmentRepository.save(enroll);				
-		return null;		
+		enrollmentRepository.save(enroll);
+		return enrollmentDTO;
 	}
 
 }
