@@ -101,10 +101,15 @@ public class EndToEndTestCreateNewAssignment
          //driver.findElement(By.xpath("//a")).click();
          //Thread.sleep(SLEEP_DURATION);
          
-         WebElement we = driver.findElement(By.xpath("//div[@name='assignmentBody']"));
-         we.findElement(By.xpath("following-sibling::input[@name='assignmentName']")).sendKeys("E2E Assign1");
-         we.findElement(By.xpath("following-sibling::input[@name='assignmentDueDate']")).sendKeys("12/21/21 11:59pm");
-         we.findElement(By.xpath("following-sibling::input[@name='assignmentName']")).sendKeys("123456");
+//         WebElement we = driver.findElement(By.xpath("//div[@name='assignmentBody']"));
+//         we.findElement(By.xpath("following-sibling::input[@name='assignmentName']")).sendKeys("E2E Assign1");
+//         we.findElement(By.xpath("following-sibling::input[@name='assignmentDueDate']")).sendKeys("12/21/21 11:59pm");
+//         we.findElement(By.xpath("following-sibling::input[@name='assignmentName']")).sendKeys("123456");
+//         
+         WebElement we = driver.findElement(By.id("assignmentBody"));
+         we.findElement(By.id("assignmentName")).sendKeys("E2E Assign1");
+         we.findElement(By.id("assignmentDueDate")).sendKeys("12/21/21 11:59pm");
+         we.findElement(By.id("courseId")).sendKeys("123456");
          
          // Locate row for student name "Test" and enter score of "99.9" into the grade field
          //we = driver.findElement(By.xpath("//div[@data-field='name' and @data-value='Test']"));
