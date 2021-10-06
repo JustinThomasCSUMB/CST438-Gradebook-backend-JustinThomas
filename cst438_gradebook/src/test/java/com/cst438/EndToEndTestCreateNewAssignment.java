@@ -2,6 +2,7 @@ package com.cst438;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ public class EndToEndTestCreateNewAssignment
    public static final String URL = "https://jt-cst438-fe.herokuapp.com/";
    public static final String TEST_USER_EMAIL = "test@csumb.edu";
    public static final String TEST_INSTRUCTOR_EMAIL = "dwisneski@csumb.edu";
-   public static final int SLEEP_DURATION = 1000; // 1 second.
+   public static final int SLEEP_DURATION = 500; // 0.5 seconds
    public static final int TEST_COURSE_ID = 123456;
 
    @Autowired
@@ -93,32 +94,51 @@ public class EndToEndTestCreateNewAssignment
 
       try {
          // locate input element for assignment for 'Test Course'
-         WebElement we = driver.findElement(By.xpath("//div[@data-value='TEST ASSIGNMENT']//input"));
-         we.click();
+         //WebElement we = driver.findElement(By.xpath("//div[@data-value='TEST ASSIGNMENT']//input"));
+         //we.click();
 
          // Locate and click Go button
-         driver.findElement(By.xpath("//a")).click();
-         Thread.sleep(SLEEP_DURATION);
+         //driver.findElement(By.xpath("//a")).click();
+         //Thread.sleep(SLEEP_DURATION);
          
-         //WebElement we = driver.findElement(By.xpath("//input[@name='assignmentName']"))
-
+         WebElement we = driver.findElement(By.xpath("//div[@name='assignmentBody']"));
+         we.findElement(By.xpath("following-sibling::input[@name='assignmentName']")).sendKeys("E2E Assign1");
+         we.findElement(By.xpath("following-sibling::input[@name='assignmentDueDate']")).sendKeys("12/21/21 11:59pm");
+         we.findElement(By.xpath("following-sibling::input[@name='assignmentName']")).sendKeys("123456");
+         
          // Locate row for student name "Test" and enter score of "99.9" into the grade field
-         we = driver.findElement(By.xpath("//div[@data-field='name' and @data-value='Test']"));
-         we.findElement(By.xpath("following-sibling::div[@data-field='grade']")).sendKeys("99.9");
+         //we = driver.findElement(By.xpath("//div[@data-field='name' and @data-value='Test']"));
+         //we.findElement(By.xpath("following-sibling::div[@data-field='grade']")).sendKeys("99.9");
 
          // Locate submit button and click
-         driver.findElement(By.xpath("//button[span='Submit']")).click();
+         driver.findElement(By.xpath("//button[@name='buttonSubmit']")).click();
          Thread.sleep(SLEEP_DURATION);
 
-         // verify that score show up
-          we = driver.findElement(By.xpath("//div[@data-field='name' and @data-value='Test']"));
-          we =  we.findElement(By.xpath("following-sibling::div[@data-field='grade']"));
-         assertEquals("99.9", we.getAttribute("data-value"));
-
-         // verify that assignment_grade has been added to database with score of 99.9
-         ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
-         assertEquals("99.9", ag.getScore());
-
+         //verify that score show up
+         //we = driver.findElement(By.xpath("//div[@data-field='name' and @data-value='Test']"));
+         //we =  we.findElement(By.xpath("following-sibling::div[@data-field='grade']"));
+         //assertEquals("99.9", we.getAttribute("data-value"));
+         we = driver.findElement(By.xpath("//div[@data-value='E2E Assign1']"));
+         assertEquals("E2E Assign1", we.getAttribute("data-value"));
+         
+         //verify that assignment_grade has been added to database with score of 99.9
+         //ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
+         //assertEquals("99.9", ag.getScore());
+         
+         // there is no clean way to get the last assignment added since we don't have a function for it
+         List<Assignment> assigns = assignmentRepository.findNeedGradingByEmail("dwisneski@csumb.edu");
+         for(Assignment assign: assigns) {
+            if(assign.getName() != "E2E Assign1") {
+               continue;
+            }
+            else if(assign.getName() == "E2E Assign1") {
+               assertEquals("E2E Assign1", assign.getName());
+               break;
+            }          
+            // fail fall through case
+            assertEquals("E2E Assign1", assign.getName());
+         }
+         
       } catch (Exception ex) {
          throw ex;
       } finally {
