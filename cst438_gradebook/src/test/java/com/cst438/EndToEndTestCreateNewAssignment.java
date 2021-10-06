@@ -116,14 +116,14 @@ public class EndToEndTestCreateNewAssignment
          //we.findElement(By.xpath("following-sibling::div[@data-field='grade']")).sendKeys("99.9");
 
          // Locate submit button and click
-         driver.findElement(By.xpath("//button[@name='buttonSubmit']")).click();
+         driver.findElement(By.id("buttonSubmit")).click();
          Thread.sleep(SLEEP_DURATION);
 
          //verify that score show up
          //we = driver.findElement(By.xpath("//div[@data-field='name' and @data-value='Test']"));
          //we =  we.findElement(By.xpath("following-sibling::div[@data-field='grade']"));
          //assertEquals("99.9", we.getAttribute("data-value"));
-         we = driver.findElement(By.xpath("//div[@data-value='E2E Assign1']"));
+         we = driver.findElement(By.xpath("//div*[@data-value='E2E Assign1']"));
          assertEquals("E2E Assign1", we.getAttribute("data-value"));
          
          //verify that assignment_grade has been added to database with score of 99.9
