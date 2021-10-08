@@ -10,6 +10,8 @@ import java.time.temporal.TemporalAccessor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -54,7 +56,7 @@ public class GradeBookController {
 /***** GET *****/
 	// get assignments for an instructor that need grading
 	@GetMapping("/gradebook")
-	public AssignmentListDTO getAssignmentsNeedGrading( ) {
+	public AssignmentListDTO getAssignmentsNeedGradin(@AuthenticationPrincipal OAuth2User principal) {
 		
 		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 		
@@ -67,7 +69,7 @@ public class GradeBookController {
 	}
 		
 	@GetMapping("/gradebook/{id}")
-	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId  ) {
+	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal) {
 		
 		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 		Assignment assignment = checkAssignment(assignmentId, email);
@@ -150,26 +152,37 @@ public class GradeBookController {
 	 */
 	@PostMapping("/gradebook/addAssignment")
 	@Transactional
-	public void addAssignment(@RequestBody AssignmentDTO assignment) throws ParseException {
-	     Assignment assign = new Assignment();
-	     java.text.DateFormat df = new java.text.SimpleDateFormat("MM-dd-yyyy h:mma");
-	     //TODO: convert from local to UTC
-	     long dueDate = df.parse(assignment.dueDate).getTime();	     
-        assign.setDueDate(new Date(dueDate));
-        assign.setName(assignment.assignmentName);
-        assign.setCourse(courseRepository.findByCourse_id(assignment.courseId));        
-        
-        assignmentRepository.save(assign);   
+	public void addAssignment(@RequestBody AssignmentDTO assignment, @AuthenticationPrincipal OAuth2User principal) throws ParseException {	   
+	    //only an instructor can add a new assignment for a course they are teaching
+     String authEmail = principal.getAttribute("email");
+     Course course = courseRepository.findByCourse_id(assignment.courseId);
+     if(course.getInstructor().toLowerCase() != authEmail.toLowerCase()) {
+        throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized");
+     }        
+     
+     Assignment assign = new Assignment();
+     java.text.DateFormat df = new java.text.SimpleDateFormat("MM-dd-yyyy h:mma");
+     //TODO: convert from local to UTC
+     long dueDate = df.parse(assignment.dueDate).getTime();	     
+     assign.setDueDate(new Date(dueDate));
+     assign.setName(assignment.assignmentName);
+     assign.setCourse(courseRepository.findByCourse_id(assignment.courseId));        
+     
+     assignmentRepository.save(assign);   
    }// addAssignment
 	
 /***** PUT *****/
 	@PutMapping("/gradebook/{id}")
 	@Transactional
-	public void updateGradebook (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId ) {
+	public void updateGradebook (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal) {
 		
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
-		checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
-		
+	   //only instructor can set assignment grade
+		String email = principal.getAttribute("email");  // user name (should be instructor's email)
+		try {
+		   checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.   
+		}catch(Exception ex) {
+		   throw ex;
+		}
 		// for each grade in gradebook, update the assignment grade in database 
 		
 		for (GradebookDTO.Grade g : gradebook.grades) {
