@@ -37,7 +37,8 @@ import com.cst438.domain.GradebookDTO;
 import com.cst438.services.RegistrationService;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:3000", "https://jt-cst438-fe.herokuapp.com/"})
+//@CrossOrigin(origins = {"http://localhost:3000", "https://jt-cst438-fe.herokuapp.com/"})
+@CrossOrigin(origins = {"http://localhost:3000"})
 public class GradeBookController {
 	
 	@Autowired
@@ -71,9 +72,13 @@ public class GradeBookController {
 	@GetMapping("/gradebook/{id}")
 	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal) {
 		
+	   // gradbook for sturdent
 		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 		Assignment assignment = checkAssignment(assignmentId, email);
 		
+		
+		
+		//gradebook for professor
 		// get the enrollment for the course
 		//  for each student, get the current grade for assignment, 
 		//   if the student does not have a current grade, create an empty grade
