@@ -16,7 +16,8 @@ import com.cst438.domain.EnrollmentDTO;
 import com.cst438.domain.EnrollmentRepository;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:3000", "https://jt-cst438-fe.herokuapp.com/"})
+//@CrossOrigin(origins = {"http://localhost:3000", "https://jt-cst438-fe.herokuapp.com/"})
+@CrossOrigin(origins = {"http://localhost:3000"})
 public class EnrollmentController {
 
 	@Autowired
