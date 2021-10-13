@@ -34,11 +34,12 @@ import com.cst438.domain.CourseDTOG;
 import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
 import com.cst438.domain.GradebookDTO;
+import com.cst438.domain.StudentRepository;
 import com.cst438.services.RegistrationService;
 
 @RestController
 //@CrossOrigin(origins = {"http://localhost:3000", "https://jt-cst438-fe.herokuapp.com/"})
-@CrossOrigin(origins = {"http://localhost:3000"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8081"})
 public class GradeBookController {
 	
 	@Autowired
@@ -52,37 +53,54 @@ public class GradeBookController {
 	
 	@Autowired
 	RegistrationService registrationService;
+	
+	@Autowired
+	StudentRepository studentRepo;
 
 	
 /***** GET *****/
+
 	// get assignments for an instructor that need grading
 	@GetMapping("/gradebook")
 	public AssignmentListDTO getAssignmentsNeedGradin(@AuthenticationPrincipal OAuth2User principal) {
-		
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
-		
-		List<Assignment> assignments = assignmentRepository.findNeedGradingByEmail(email);
-		AssignmentListDTO result = new AssignmentListDTO();
-		for (Assignment a: assignments) {
-			result.assignments.add(new AssignmentListDTO.AssignmentDTO(a.getId(), a.getCourse().getCourse_id(), a.getName(), a.getDueDate().toString() , a.getCourse().getTitle()));
-		}
-		return result;
+
+	   List<Assignment> assignments;
+      AssignmentListDTO result = new AssignmentListDTO();
+		//String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+      // check if student or instructor
+      String email = principal.getAttribute("email");
+      
+      if(courseRepository.findByEmail(email).size() > 0) {
+         // instructor not found in the courses tables
+         assignments = assignmentRepository.findNeedGradingByEmail(email);
+         for (Assignment a: assignments) {
+            result.assignments.add(new AssignmentListDTO.AssignmentDTO(a.getId(), a.getCourse().getCourse_id(), a.getName(), a.getDueDate().toString() , a.getCourse().getTitle()));
+         }
+         
+         return result;
+      }else if(studentRepo.findByEmail(email) != null) {
+         
+         assignments = assignmentRepository.findAllByEmail(email);
+         for (Assignment a: assignments) {
+            result.assignments.add(new AssignmentListDTO.AssignmentDTO(a.getId(), a.getCourse().getCourse_id(), a.getName(), a.getDueDate().toString() , a.getCourse().getTitle()));
+         }
+         
+         return result;         
+      }
+      
+		return null;
 	}
 		
 	@GetMapping("/gradebook/{id}")
 	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal) {
 		
-	   // gradbook for sturdent
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
-		Assignment assignment = checkAssignment(assignmentId, email);
-		
-		
-		
-		//gradebook for professor
-		// get the enrollment for the course
-		//  for each student, get the current grade for assignment, 
-		//   if the student does not have a current grade, create an empty grade
-		GradebookDTO gradebook = new GradebookDTO();
+	   String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+      Assignment assignment = checkAssignment(assignmentId, email);
+      
+      // get the enrollment for the course
+      //  for each student, get the current grade for assignment, 
+      //   if the student does not have a current grade, create an empty grade
+      GradebookDTO gradebook = new GradebookDTO();
 		gradebook.assignmentId= assignmentId;
 		gradebook.assignmentName = assignment.getName();
 		for (Enrollment e : assignment.getCourse().getEnrollments()) {
